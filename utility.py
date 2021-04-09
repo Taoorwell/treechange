@@ -9,12 +9,16 @@ from matplotlib import pyplot as plt
 def load_data(path, mode):
     images_1_path = sorted(glob(os.path.join(path, r"im1/*.png")))
     images_2_path = sorted(glob(os.path.join(path, r"im2/*.png")))
-
     masks_path = sorted(glob(os.path.join(path, r"label1/*.png")))
     if mode == 'train':
-        images_1_path, images_2_path, masks_path = images_1_path[:-268], images_2_path[:-268], masks_path[0:-268]
+        images_1_path, images_2_path, masks_path = images_1_path[:2430], \
+                                                   images_2_path[:2430], masks_path[0:2430]
+    elif mode == 'valid':
+        images_1_path, images_2_path, masks_path = images_1_path[2430:-268], \
+                                                   images_2_path[2430:-268], masks_path[2430:-268]
     else:
-        images_1_path, images_2_path, masks_path = images_1_path[-268:], images_2_path[-268:], masks_path[-268:]
+        images_1_path, images_2_path, masks_path = images_1_path[-268:], \
+                                                   images_2_path[-268:], masks_path[-268:]
     return images_1_path, images_2_path, masks_path
 
 
@@ -45,13 +49,13 @@ def get_mask(mask_path):
 #     return arr
 
 
-def plot_mask(result):
-    arr_2d = result
-    arr_3d = np.zeros((arr_2d.shape[0], arr_2d.shape[1], 3), dtype=np.uint8)
-    for c, i in palette.items():
-        m = arr_2d == c
-        arr_3d[m] = i
-    plt.imshow(arr_3d)
+# def plot_mask(result):
+#     arr_2d = result
+#     arr_3d = np.zeros((arr_2d.shape[0], arr_2d.shape[1], 3), dtype=np.uint8)
+#     for c, i in palette.items():
+#         m = arr_2d == c
+#         arr_3d[m] = i
+#     plt.imshow(arr_3d)
 
 
 palette = {0: (255, 255, 255),  # White

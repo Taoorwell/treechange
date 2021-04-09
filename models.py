@@ -63,14 +63,53 @@ def decoder(x, from_decoder1, from_decoder2):
     return main_path
 
 
-def siamese_unet(input_shape):
+def residual_unet(input_shape):
+    inputs = Input(input_shape)
+    to_decoder = encoder(inputs)
+    main_path = UpSampling2D(size=(2, 2))(to_decoder[-1])
+    main_path = concatenate([main_path, to_decoder[2]], axis=3)
+    main_path = conv_block(main_path, [128, 128], [(1, 1), (1, 1)])
+
+    main_path = UpSampling2D(size=(2, 2))(main_path)
+    main_path = concatenate([main_path, to_decoder[1]], axis=3)
+    main_path = conv_block(main_path, [64, 64], [(1, 1), (1, 1)])
+
+    main_path = UpSampling2D(size=(2, 2))(main_path)
+    main_path = concatenate([main_path, to_decoder[0]], axis=3)
+    main_path = conv_block(main_path, [32, 32], [(1, 1), (1, 1)])
+    output = Conv2D(filters=1, kernel_size=(1, 1), activation='sigmoid')(main_path)
+
+    return Model(inputs=inputs, outputs=output)
+
+
+def siamese_residual_unet(input_shape, mode):
+    # siamese residual Unet: two input in encoder part using weights sharing
+    # and concatenate or diff both into the decoder part.
     inputs = Input(input_shape)
     encoder_part = Model(inputs=inputs, outputs=encoder(inputs))
 
     input1, input2 = Input(input_shape), Input(input_shape)
     to_decoder_1, to_decoder_2 = encoder_part([input1]), encoder_part([input2])
+    if mode == 'concat':
+        input12 = concatenate([to_decoder_1[-1], to_decoder_2[-1]], axis=-1)
+    else:
+        input12 = tf.math.abs(to_decoder_1[-1] - to_decoder_2[-1])
 
-    input12 = concatenate([to_decoder_1[-1], to_decoder_2[-1]], axis=-1)
+    output = decoder(input12, to_decoder_1, to_decoder_2)
+    output = Conv2D(filters=1, kernel_size=(1, 1), activation='sigmoid')(output)
+
+    return Model(inputs={'input_1': input1, 'input_2': input2}, outputs=output)
+
+
+def dual_residual_unet(input_shape, mode):
+    # dual residual Unet: each input has its own encoder part weights (no sharing),
+    # and then concatenate or differ each other to the decoder part.
+    input1, input2 = Input(input_shape), Input(input_shape)
+    to_decoder_1, to_decoder_2 = encoder(input1), encoder(input2)
+    if mode == 'concat':
+        input12 = concatenate([to_decoder_1[-1], to_decoder_2[-1]], axis=-1)
+    else:
+        input12 = tf.math.abs(to_decoder_1[-1] - to_decoder_2[-1])
 
     output = decoder(input12, to_decoder_1, to_decoder_2)
     output = Conv2D(filters=1, kernel_size=(1, 1), activation='sigmoid')(output)
@@ -90,7 +129,9 @@ def dice_loss(y_true, y_pred):
     return 1 - (numerator / denominator)
 
 
-if __name__ == '__main__':
-    model = siamese_unet(input_shape=(512, 512, 3))
-    model.summary()
+# if __name__ == '__main__':
+    # model = residual_unet(input_shape=(512, 512, 6))
+    # model = siamese_residual_unet(input_shape=(512, 512, 3), mode='concat')
+    # model = dual_residual_unet(input_shape=(512, 512, 3), mode='diff')
+    # model.summary()
 

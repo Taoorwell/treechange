@@ -5,7 +5,7 @@ from models import *
 
 
 # Datasets construction
-def image_dataset(path, mode, width, batch_size):
+def image_dataset(path, mode, width, batch_size, dual=True):
     # image path and mask path dataset
     images_1_path, images_2_path, masks_path = load_data(path, mode)
     datasets = tf.data.Dataset.from_tensor_slices((images_1_path, images_2_path, masks_path))
@@ -16,7 +16,6 @@ def image_dataset(path, mode, width, batch_size):
         def f(x1, x2, y):
             x1 = x1.decode()
             x2 = x2.decode()
-
             y = y.decode()
 
             x1 = get_image(x1)
@@ -28,7 +27,11 @@ def image_dataset(path, mode, width, batch_size):
         image1.set_shape([width, width, 3])
         image2.set_shape([width, width, 3])
         mask.set_shape([width, width, 1])
-        return {'input_1': image1, 'input_2': image2}, mask
+        if dual is True:
+            return {'input_1': image1, 'input_2': image2}, mask
+        else:
+            image = tf.concat([image1, image2], axis=2)
+            return image, mask
     datasets = datasets.map(parse_fun)
     datasets = datasets.batch(batch_size)
     datasets = datasets.repeat()
@@ -38,11 +41,17 @@ def image_dataset(path, mode, width, batch_size):
 if __name__ == '__main__':
     width = 512
     batch_size = 3
-    steps = 2700 // batch_size
-
+    train_steps = 2430 // batch_size
+    valid_steps = 270 // batch_size
     # image_path, mask_path = load_data(path='../', mode='test')
     train_dataset = image_dataset(path=r'../SECOND_train_set/', mode='train',
-                                  width=width, batch_size=batch_size)
+                                  width=width, batch_size=batch_size, dual=False)
+    valid_dataset = image_dataset(path=r'../SECOND_train_set/', mode='valid',
+                                  width=width, batch_size=batch_size, dual=False)
+
+    # for image, mask in train_dataset:
+    #     # print(image['input_1'].shape, image['input_2'].shape, mask.shape)
+    #     print(image.shape, mask.shape)
     # for input_dict, label in train_dataset:
     #     print(input_dict['input_1'].shape, label.shape)
     # for x1, x2, y in train_dataset:
@@ -95,18 +104,23 @@ if __name__ == '__main__':
     #                             width=width, batch_size=batch_size)
 
     # model construction
-    model = siamese_unet(input_shape=(width, width, 3))
+    # model = siamese_residual_unet(input_shape=(width, width, 3), mode='concat')
+    # model = dual_residual_unet(input_shape=(width, width, 3), mode='concat')
+    strategy = tf.distribute.MirroredStrategy()
+    with strategy.scope():
+        model = residual_unet(input_shape=(width, width, 6))
     # model.summary()
-    #
     # # model compile
-    model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.001),
-                  loss=dice_loss, metrics=[dice])
-    #
+        model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.001),
+                      loss=dice_loss, metrics=[dice])
     # tensorboard
     tensorboard_callbacks = tf.keras.callbacks.TensorBoard(log_dir='tb_callback_dir',
                                                            histogram_freq=1)
-
-    model.fit(train_dataset, steps_per_epoch=steps, epochs=25,
+    #
+    model.fit(train_dataset,
+              steps_per_epoch=train_steps,
+              epochs=25, validation_data=valid_dataset,
+              validation_steps=valid_steps,
               callbacks=[tensorboard_callbacks])
     # model.save('model.h5')
     model.save_weights('checkpoints/ckpt')
