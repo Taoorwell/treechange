@@ -25,16 +25,16 @@ def conv_block(x, filters, strides):
 
 def encoder(x):
     to_decoder = []
-    main_path = conv_block(x, [64, 64], [(1, 1), (1, 1)])
+    main_path = conv_block(x, [32, 32], [(1, 1), (1, 1)])
+    to_decoder.append(main_path)
+
+    main_path = conv_block(main_path, [64, 64], [(1, 1), (2, 2)])
     to_decoder.append(main_path)
 
     main_path = conv_block(main_path, [128, 128], [(1, 1), (2, 2)])
     to_decoder.append(main_path)
 
     main_path = conv_block(main_path, [256, 256], [(1, 1), (2, 2)])
-    to_decoder.append(main_path)
-
-    main_path = conv_block(main_path, [512, 512], [(1, 1), (2, 2)])
     to_decoder.append(main_path)
 
     return to_decoder
@@ -50,15 +50,15 @@ def slice_concatenate(x1, x2, x3):
 def decoder(x, from_decoder1, from_decoder2):
     main_path = UpSampling2D(size=(2, 2))(x)
     main_path = slice_concatenate(main_path, from_decoder1[2], from_decoder2[2])
-    main_path = conv_block(main_path, [256, 256], [(1, 1), (1, 1)])
-
-    main_path = UpSampling2D(size=(2, 2))(main_path)
-    main_path = slice_concatenate(main_path, from_decoder1[1], from_decoder2[1])
     main_path = conv_block(main_path, [128, 128], [(1, 1), (1, 1)])
 
     main_path = UpSampling2D(size=(2, 2))(main_path)
-    main_path = slice_concatenate(main_path, from_decoder1[0], from_decoder2[0])
+    main_path = slice_concatenate(main_path, from_decoder1[1], from_decoder2[1])
     main_path = conv_block(main_path, [64, 64], [(1, 1), (1, 1)])
+
+    main_path = UpSampling2D(size=(2, 2))(main_path)
+    main_path = slice_concatenate(main_path, from_decoder1[0], from_decoder2[0])
+    main_path = conv_block(main_path, [32, 32], [(1, 1), (1, 1)])
 
     return main_path
 
