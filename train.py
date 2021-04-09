@@ -37,7 +37,9 @@ def image_dataset(path, mode, width, batch_size):
 
 if __name__ == '__main__':
     width = 512
-    batch_size = 2
+    batch_size = 3
+    steps = 2700 // batch_size
+
     # image_path, mask_path = load_data(path='../', mode='test')
     train_dataset = image_dataset(path=r'../SECOND_train_set/', mode='train',
                                   width=width, batch_size=batch_size)
@@ -104,7 +106,7 @@ if __name__ == '__main__':
     tensorboard_callbacks = tf.keras.callbacks.TensorBoard(log_dir='tb_callback_dir',
                                                            histogram_freq=1)
 
-    model.fit(train_dataset, steps_per_epoch=1350, epochs=25,
+    model.fit(train_dataset, steps_per_epoch=steps, epochs=25,
               callbacks=[tensorboard_callbacks])
     # model.save('model.h5')
     model.save_weights('checkpoints/ckpt')
