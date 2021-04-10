@@ -4,3 +4,4 @@ pre/
 checkpoints/
 .ipynb_checkpoints/
 .vs/
+nohup.out
