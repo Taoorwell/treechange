@@ -96,8 +96,7 @@ if __name__ == '__main__':
     #     plt.title('Accuracy:{:.2%}'.format(acc))
     #     # plt.show()
     #     plt.savefig('pre/treecover/Image_{}_pre'.format(image_id))
-    #     print('finish: {}'.format(i))
-    #     if i == 34:
+    #     print('finish: {}'.format(i))    #     if i == 34:
     #         break
     #
     # val_dataset = image_dataset(path='../..', mode='eval',
@@ -109,13 +108,14 @@ if __name__ == '__main__':
     strategy = tf.distribute.MirroredStrategy()
     with strategy.scope():
         # model = residual_unet(input_shape=(width, width, 6))
-        model = siamese_residual_unet(input_shape=(width, width, 3), mode='concat')
+        # model = siamese_residual_unet(input_shape=(width, width, 3), mode='diff')
+        model = dual_residual_unet(input_shape=(width, width, 3), mode='diff')
     # model.summary()
     # # model compile
         model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.001),
                       loss=dice_loss, metrics=[dice])
     # tensorboard
-    tensorboard_callbacks = tf.keras.callbacks.TensorBoard(log_dir='tb_callback_dir/siamese_concat',
+    tensorboard_callbacks = tf.keras.callbacks.TensorBoard(log_dir='tb_callback_dir/dual_diff',
                                                            histogram_freq=1)
     #
     model.fit(train_dataset,
@@ -124,5 +124,5 @@ if __name__ == '__main__':
               validation_steps=valid_steps,
               callbacks=[tensorboard_callbacks])
     # model.save('model.h5')
-    model.save_weights('checkpoints/ckpt-siamese_concat')
+    model.save_weights('checkpoints/ckpt-dual_diff')
 
