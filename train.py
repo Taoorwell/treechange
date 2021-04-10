@@ -45,9 +45,9 @@ if __name__ == '__main__':
     valid_steps = 270 // batch_size
     # image_path, mask_path = load_data(path='../', mode='test')
     train_dataset = image_dataset(path=r'../SECOND_train_set/', mode='train',
-                                  width=width, batch_size=batch_size, dual=False)
+                                  width=width, batch_size=batch_size, dual=True)
     valid_dataset = image_dataset(path=r'../SECOND_train_set/', mode='valid',
-                                  width=width, batch_size=batch_size, dual=False)
+                                  width=width, batch_size=batch_size, dual=True)
 
     # for image, mask in train_dataset:
     #     # print(image['input_1'].shape, image['input_2'].shape, mask.shape)
@@ -108,13 +108,14 @@ if __name__ == '__main__':
     # model = dual_residual_unet(input_shape=(width, width, 3), mode='concat')
     strategy = tf.distribute.MirroredStrategy()
     with strategy.scope():
-        model = residual_unet(input_shape=(width, width, 6))
+        # model = residual_unet(input_shape=(width, width, 6))
+        model = siamese_residual_unet(input_shape=(width, width, 3), mode='concat')
     # model.summary()
     # # model compile
         model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.001),
                       loss=dice_loss, metrics=[dice])
     # tensorboard
-    tensorboard_callbacks = tf.keras.callbacks.TensorBoard(log_dir='tb_callback_dir',
+    tensorboard_callbacks = tf.keras.callbacks.TensorBoard(log_dir='tb_callback_dir/siamese_concat',
                                                            histogram_freq=1)
     #
     model.fit(train_dataset,
@@ -123,5 +124,5 @@ if __name__ == '__main__':
               validation_steps=valid_steps,
               callbacks=[tensorboard_callbacks])
     # model.save('model.h5')
-    model.save_weights('checkpoints/ckpt_residual_unet')
+    model.save_weights('checkpoints/ckpt-siamese_concat')
 
