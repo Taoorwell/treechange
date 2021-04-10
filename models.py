@@ -132,6 +132,6 @@ def dice_loss(y_true, y_pred):
 if __name__ == '__main__':
     # model = residual_unet(input_shape=(512, 512, 6))
     # model = siamese_residual_unet(input_shape=(512, 512, 3), mode='concat')
-    model = dual_residual_unet(input_shape=(256, 256, 3), mode='diff')
+    model = dual_residual_unet(input_shape=(512, 512, 3), mode='diff')
     model.summary()
 

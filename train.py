@@ -109,13 +109,13 @@ if __name__ == '__main__':
     with strategy.scope():
         # model = residual_unet(input_shape=(width, width, 6))
         # model = siamese_residual_unet(input_shape=(width, width, 3), mode='diff')
-        model = dual_residual_unet(input_shape=(width, width, 3), mode='diff')
+        model = dual_residual_unet(input_shape=(width, width, 3), mode='concat')
     # model.summary()
     # # model compile
         model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.001),
                       loss=dice_loss, metrics=[dice])
     # tensorboard
-    tensorboard_callbacks = tf.keras.callbacks.TensorBoard(log_dir='tb_callback_dir/dual_diff',
+    tensorboard_callbacks = tf.keras.callbacks.TensorBoard(log_dir='tb_callback_dir/dual_concat',
                                                            histogram_freq=1)
     #
     model.fit(train_dataset,
@@ -124,5 +124,5 @@ if __name__ == '__main__':
               validation_steps=valid_steps,
               callbacks=[tensorboard_callbacks])
     # model.save('model.h5')
-    model.save_weights('checkpoints/ckpt-dual_diff')
+    model.save_weights('checkpoints/ckpt-dual_concat')
 
