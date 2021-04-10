@@ -119,9 +119,9 @@ if __name__ == '__main__':
     #
     model.fit(train_dataset,
               steps_per_epoch=train_steps,
-              epochs=25, validation_data=valid_dataset,
+              epochs=50, validation_data=valid_dataset,
               validation_steps=valid_steps,
               callbacks=[tensorboard_callbacks])
     # model.save('model.h5')
-    model.save_weights('checkpoints/ckpt')
+    model.save_weights('checkpoints/ckpt_residual_unet')
 
