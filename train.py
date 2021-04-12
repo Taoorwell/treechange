@@ -115,9 +115,9 @@ if __name__ == '__main__':
     # model = dual_residual_unet(input_shape=(width, width, 3), mode='concat')
     strategy = tf.distribute.MirroredStrategy()
     with strategy.scope():
-        model = residual_unet(input_shape=(width, width, 3))
-        # model = siamese_residual_unet(input_shape=(width, width, 3), mode='diff')
-        # model = dual_residual_unet(input_shape=(width, width, 3), mode='concat')
+        # model = residual_unet(input_shape=(width, width, 3))
+        model = siamese_residual_unet(input_shape=(width, width, 3), mode='diff')
+        # model = dual_residual_unet(input_shape=(width, width, 3), mode='diff')
     # model.summary()
     # # model compile
         model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.001),
