@@ -116,14 +116,14 @@ if __name__ == '__main__':
     strategy = tf.distribute.MirroredStrategy()
     with strategy.scope():
         # model = residual_unet(input_shape=(width, width, 3))
-        model = siamese_residual_unet(input_shape=(width, width, 3), mode='diff')
-        # model = dual_residual_unet(input_shape=(width, width, 3), mode='diff')
+        # model = siamese_residual_unet(input_shape=(width, width, 3), mode='diff')
+        model = dual_residual_unet(input_shape=(width, width, 3), mode='diff')
     # model.summary()
     # # model compile
         model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.001),
                       loss=dice_loss, metrics=[dice])
     # tensorboard
-    tensorboard_callbacks = tf.keras.callbacks.TensorBoard(log_dir='tb_callback_dir/siamese_diff_1',
+    tensorboard_callbacks = tf.keras.callbacks.TensorBoard(log_dir='tb_callback_dir/dual_diff_1',
                                                            histogram_freq=1)
     #
     model.fit(train_dataset,
@@ -132,5 +132,5 @@ if __name__ == '__main__':
               validation_steps=valid_steps,
               callbacks=[tensorboard_callbacks])
     # model.save('model.h5')
-    model.save_weights('checkpoints/ckpt-siamese_diff_1')
+    model.save_weights('checkpoints/ckpt-dual_diff_1')
 
