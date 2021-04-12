@@ -40,14 +40,15 @@ def encoder(x):
     return to_decoder
 
 
-def slice_concatenate(x1, x2, x3):
+def slice_concatenate(x1, x2, *x3):
     if x1.shape != x2.shape:
         x1 = x1[:, :x2.shape[1], :x2.shape[2], :]
-    x = concatenate([x1, x2, x3], axis=3)
+    x = concatenate([x1, x2, *x3], axis=3)
     return x
 
 
-def decoder(x, from_decoder1, from_decoder2):
+def decoder_concat(from_decoder1, from_decoder2):
+    x = concatenate([from_decoder1[-1], from_decoder2[-1]], axis=-1)
     main_path = UpSampling2D(size=(2, 2))(x)
     main_path = slice_concatenate(main_path, from_decoder1[2], from_decoder2[2])
     main_path = conv_block(main_path, [128, 128], [(1, 1), (1, 1)])
@@ -58,6 +59,26 @@ def decoder(x, from_decoder1, from_decoder2):
 
     main_path = UpSampling2D(size=(2, 2))(main_path)
     main_path = slice_concatenate(main_path, from_decoder1[0], from_decoder2[0])
+    main_path = conv_block(main_path, [32, 32], [(1, 1), (1, 1)])
+
+    return main_path
+
+
+def decoder_diff(from_decoder1, from_decoder2):
+    x = tf.math.abs(from_decoder1[-1] - from_decoder2[-1])
+    main_path = UpSampling2D(size=(2, 2))(x)
+    x2 = tf.math.abs(from_decoder1[2] - from_decoder2[2])
+    main_path = slice_concatenate(main_path, x2)
+    main_path = conv_block(main_path, [128, 128], [(1, 1), (1, 1)])
+
+    main_path = UpSampling2D(size=(2, 2))(main_path)
+    x3 = tf.math.abs(from_decoder1[1] - from_decoder2[1])
+    main_path = slice_concatenate(main_path, x3)
+    main_path = conv_block(main_path, [64, 64], [(1, 1), (1, 1)])
+
+    main_path = UpSampling2D(size=(2, 2))(main_path)
+    x4 = tf.math.abs(from_decoder1[0] - from_decoder2[0])
+    main_path = slice_concatenate(main_path, x4)
     main_path = conv_block(main_path, [32, 32], [(1, 1), (1, 1)])
 
     return main_path
@@ -91,11 +112,10 @@ def siamese_residual_unet(input_shape, mode):
     input1, input2 = Input(input_shape), Input(input_shape)
     to_decoder_1, to_decoder_2 = encoder_part([input1]), encoder_part([input2])
     if mode == 'concat':
-        input12 = concatenate([to_decoder_1[-1], to_decoder_2[-1]], axis=-1)
+        output = decoder_concat(to_decoder_1, to_decoder_2)
     else:
-        input12 = tf.math.abs(to_decoder_1[-1] - to_decoder_2[-1])
+        output = decoder_diff(to_decoder_1, to_decoder_2)
 
-    output = decoder(input12, to_decoder_1, to_decoder_2)
     output = Conv2D(filters=1, kernel_size=(1, 1), activation='sigmoid')(output)
 
     return Model(inputs={'input_1': input1, 'input_2': input2}, outputs=output)
@@ -107,11 +127,9 @@ def dual_residual_unet(input_shape, mode):
     input1, input2 = Input(input_shape), Input(input_shape)
     to_decoder_1, to_decoder_2 = encoder(input1), encoder(input2)
     if mode == 'concat':
-        input12 = concatenate([to_decoder_1[-1], to_decoder_2[-1]], axis=-1)
+        output = decoder_concat(to_decoder_1, to_decoder_2)
     else:
-        input12 = tf.math.abs(to_decoder_1[-1] - to_decoder_2[-1])
-
-    output = decoder(input12, to_decoder_1, to_decoder_2)
+        output = decoder_diff(to_decoder_1, to_decoder_2)
     output = Conv2D(filters=1, kernel_size=(1, 1), activation='sigmoid')(output)
 
     return Model(inputs={'input_1': input1, 'input_2': input2}, outputs=output)
@@ -130,8 +148,8 @@ def dice_loss(y_true, y_pred):
 
 
 if __name__ == '__main__':
-    # model = residual_unet(input_shape=(512, 512, 6))
-    # model = siamese_residual_unet(input_shape=(512, 512, 3), mode='concat')
+    # model = residual_unet(input_shape=(512, 512, 3))
+    # model = siamese_residual_unet(input_shape=(512, 512, 3), mode='diff')
     model = dual_residual_unet(input_shape=(512, 512, 3), mode='diff')
     model.summary()
 

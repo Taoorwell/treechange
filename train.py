@@ -46,15 +46,22 @@ if __name__ == '__main__':
     valid_steps = 270 // batch_size
     # image_path, mask_path = load_data(path='../', mode='test')
     train_dataset = image_dataset(path=r'../SECOND_train_set/', mode='train',
-                                  width=width, batch_size=batch_size, dual=False)
+                                  width=width, batch_size=batch_size, dual=True)
     valid_dataset = image_dataset(path=r'../SECOND_train_set/', mode='valid',
-                                  width=width, batch_size=batch_size, dual=False)
+                                  width=width, batch_size=batch_size, dual=True)
 
     # for image, mask in train_dataset:
     #     # print(image['input_1'].shape, image['input_2'].shape, mask.shape)
     #     print(image.shape, mask.shape)
     # for input_dict, label in train_dataset:
     #     print(input_dict['input_1'].shape, label.shape)
+    #     plt.subplot(131)
+    #     plt.imshow(input_dict['input_1'].numpy()[0])
+    #     plt.subplot(132)
+    #     plt.imshow(input_dict['input_2'].numpy()[0])
+    #     plt.subplot(133)
+    #     plt.imshow(label.numpy()[0][:, :, 0])
+    #     plt.show()
     # for x1, x2, y in train_dataset:
     #     plt.subplot(131)
     #     plt.imshow(x1.numpy()[0])
@@ -116,7 +123,7 @@ if __name__ == '__main__':
         model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.001),
                       loss=dice_loss, metrics=[dice])
     # tensorboard
-    tensorboard_callbacks = tf.keras.callbacks.TensorBoard(log_dir='tb_callback_dir/diff_residual',
+    tensorboard_callbacks = tf.keras.callbacks.TensorBoard(log_dir='tb_callback_dir/siamese_diff_1',
                                                            histogram_freq=1)
     #
     model.fit(train_dataset,
@@ -125,5 +132,5 @@ if __name__ == '__main__':
               validation_steps=valid_steps,
               callbacks=[tensorboard_callbacks])
     # model.save('model.h5')
-    model.save_weights('checkpoints/ckpt-diff-residual')
+    model.save_weights('checkpoints/ckpt-siamese_diff_1')
 
