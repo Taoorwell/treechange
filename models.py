@@ -9,7 +9,7 @@ def conv_block(x, filters, strides):
     main_path = BatchNormalization()(main_path)
     main_path = Activation(activation='relu')(main_path)
 
-    main_path = Conv2D(filters= filters[1], kernel_size=(3, 3),
+    main_path = Conv2D(filters=filters[1], kernel_size=(3, 3),
                        strides=strides[1], padding='same')(main_path)
     main_path = BatchNormalization()(main_path)
     main_path = Activation(activation='relu')(main_path)
