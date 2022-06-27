@@ -7,12 +7,12 @@ import numpy as np
 dataloader = dataloader(image_dir=r'images/', batch_size=1)
 
 # Step 2: Model preparation
-model = ResUnet(n_bands=7, n_classes=3)
+model = ResUnet(n_bands=7, n_classes=50)
 
 # Step 3: Training configuration
-epochs = 100
-lr = 0.001
-iteration = 20
+epochs = 10
+lr = 0.0001
+iteration = 100
 # get device
 device = get_device()
 # # loss function and optimizer defining
@@ -39,23 +39,27 @@ for epoch in range(epochs):
             segment = batch_sample['Segment'].to(device)
             # forward
             output = model(image)[0]
-            print(f'Output shape: {output.shape}')
+            # print(f'Output shape: {output.shape}')
             output_label = torch.argmax(output, dim=0)
-            print(f'Output label shape: {output_label.shape}')
-            n_unique_labels = torch.unique(output_label, dim=0)
-            print(f'The number of unique labels: {len(n_unique_labels)}')
+            # print(f'Output label shape: {output_label.shape}')
+            n_unique_labels = torch.unique(output_label)
+            # print(f'The number of unique labels: {len(n_unique_labels)}')
 
             # spatial refinements using segment in batch sample
-            for i_segment in torch.unique(segment):
+            for i_segment in torch.unique(segment[0]):
                 i_segment_labels = output_label[segment[0] == i_segment]
                 u_i_segment_labels, hist = torch.unique(i_segment_labels, return_counts=True)
                 output_label[segment[0] == i_segment] = u_i_segment_labels[torch.argmax(hist)]
             # loss and backpropagation
+            output = output.permute(1, 2, 0).contiguous().view(-1, 50)
+            output_label = output_label.view(-1)
             loss = loss_function(output, output_label)
             loss.backward()
             optimizer.step()
             batch_sample_loss.append(loss.item())
-        print(f'Single batch mean loss: {np.mean(batch_sample_loss)}')
+            if len(n_unique_labels) <= 3:
+                break
+        print(f'Epoch: {epoch}, Single batch mean loss: {np.mean(batch_sample_loss)}')
         epoch_sample_loss.append(np.mean(batch_sample_loss))
     print(f'Epoch:{epoch}, epoch mean loss: {np.mean(epoch_sample_loss)}')
 
