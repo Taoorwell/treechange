@@ -1,6 +1,6 @@
 import torch
 from dataloader import dataloader, get_device
-from unets import ResUnet
+from unets import ResUnet, DiceLoss
 import numpy as np
 
 # Step 1: Datasets and Dataloader preparation
@@ -20,6 +20,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
 # # To Do: cross entropy or dice loss
 loss_function = torch.nn.CrossEntropyLoss()
+dice_loss = DiceLoss()
 
 # # model to device
 model.to(device)
@@ -51,9 +52,10 @@ for epoch in range(epochs):
                 u_i_segment_labels, hist = torch.unique(i_segment_labels, return_counts=True)
                 output_label[segment[0] == i_segment] = u_i_segment_labels[torch.argmax(hist)]
             # loss and backpropagation
-            output = output.permute(1, 2, 0).contiguous().view(-1, 50)
-            output_label = output_label.view(-1)
-            loss = loss_function(output, output_label)
+            # output = output.permute(1, 2, 0).contiguous().view(-1, 50)
+            # output_label = output_label.view(-1)
+            # loss = loss_function(output, output_label)
+            loss = dice_loss(output, output_label)
             loss.backward()
             optimizer.step()
             batch_sample_loss.append(loss.item())

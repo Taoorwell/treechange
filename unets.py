@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class ResidualConv(nn.Module):
@@ -90,9 +91,34 @@ class ResUnet(nn.Module):
         return out
 
 
-# if __name__ == '__main__':
-#     x = torch.ones(size=(8, 7, 256, 256))
-#     print(x.shape)
-#     unet = ResUnet(n_bands=7, n_classes=3)
-#     out = unet(x)
-#     print(out.shape)
+class DiceLoss(nn.Module):
+    def __init__(self):
+        super(DiceLoss, self).__init__()
+        self.eps = 1e-6
+
+    def forward(self, outputs, targets):
+        # one hot for targets (index type)
+        targets_one_hot = F.one_hot(targets, num_classes=outputs.shape[0])
+        targets_one_hot = targets_one_hot.permute((2, 0, 1))
+        print(targets_one_hot.shape)
+        intersection = torch.sum(outputs*targets_one_hot)
+        cardinality = torch.sum(outputs + targets_one_hot)
+
+        dice_score = 2. * intersection / (cardinality + self.eps)
+        return torch.mean(1. - dice_score)
+
+
+if __name__ == '__main__':
+    y = torch.randint(0, 10, (2, 5))
+    print(y.shape)
+    x = torch.zeros((10, 2, 5))
+    print(x.shape)
+    loss = DiceLoss()
+    loss_value = loss(x, y)
+    print(loss_value)
+
+    # x = torch.ones(size=(8, 7, 256, 256))
+    # print(x.shape)
+    # unet = ResUnet(n_bands=7, n_classes=3)
+    # out = unet(x)
+    # print(out.shape)
