@@ -10,7 +10,7 @@ dataloader = dataloader(image_dir=r'images/', batch_size=1)
 model = ResUnet(n_bands=7, n_classes=50)
 
 # Step 3: Training configuration
-epochs = 10
+epochs = 1
 lr = 0.0001
 iteration = 20
 # get device
@@ -66,6 +66,9 @@ for epoch in range(epochs):
               f'single batch mean loss: {np.mean(batch_sample_loss)}')
         epoch_sample_loss.append(np.mean(batch_sample_loss))
     print(f'Epoch:{epoch}, epoch mean loss: {np.mean(epoch_sample_loss)}')
+
+# model saved
+torch.save(model.state_dict(), r'checkpoints/unsupervised_model')
 
 
 
