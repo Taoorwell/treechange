@@ -121,7 +121,7 @@ class TreeCrownDataset(Dataset):
         # if torch.is_tensor(item):
         #     item = item.tolist()
         image = get_image(self.image_path_list[item])
-        segment = slic(image[:, :, [4, 3, 2]], n_segments=800, compactness=10, start_label=1)
+        segment = slic(image[:, :, [4, 3, 2]], n_segments=800, compactness=50, start_label=1)
         sample = {'Image': image, 'Segment': segment}
         if self.transform:
             sample = self.transform(sample)
@@ -137,26 +137,26 @@ def dataloader(image_dir, batch_size, num_workers=2):
     return dataloader
 
 
-# if __name__ == '__main__':
-#     device = get_device()
-#     print(device)
-#     # # pass
-#     # dataset = TreeCrownDataset(image_dir='images/',
-#     #                            transform=transforms.Compose([RandomCrop(256),
-#     #                                                          Flip(),
-#     #                                                          ToTensor()]))
-#     # print(len(dataset))
-#     # for sample in dataset:
-#     #     # print(sample['Image'].dtype)
-#     #     print(sample['Image'].shape, sample['Segment'].shape)
-#     #     break
-#     # dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=2)
-#     dataloader = dataloader(image_dir=r'images/', batch_size=8)
-#     for i_batch, sample_batched in enumerate(dataloader):
-#         print(i_batch, sample_batched['Image'].shape, sample_batched['Segment'].shape)
-#         plot_sample(image=sample_batched['Image'], segment=sample_batched['Segment'])
-#         if i_batch == 3:
-#             break
+if __name__ == '__main__':
+    device = get_device()
+    print(device)
+    # # pass
+    # dataset = TreeCrownDataset(image_dir='images/',
+    #                            transform=transforms.Compose([RandomCrop(256),
+    #                                                          Flip(),
+    #                                                          ToTensor()]))
+    # print(len(dataset))
+    # for sample in dataset:
+    #     # print(sample['Image'].dtype)
+    #     print(sample['Image'].shape, sample['Segment'].shape)
+    #     break
+    # dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=2)
+    dataloader = dataloader(image_dir=r'images/', batch_size=1)
+    for i_batch, sample_batched in enumerate(dataloader):
+        print(i_batch, sample_batched['Image'].shape, sample_batched['Segment'].shape)
+        plot_sample(image=sample_batched['Image'], segment=sample_batched['Segment'])
+        if i_batch == 3:
+            break
 
 
 

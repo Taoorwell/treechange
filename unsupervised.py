@@ -12,7 +12,7 @@ model = ResUnet(n_bands=7, n_classes=50)
 # Step 3: Training configuration
 epochs = 10
 lr = 0.0001
-iteration = 100
+iteration = 20
 # get device
 device = get_device()
 # # loss function and optimizer defining
@@ -62,7 +62,8 @@ for epoch in range(epochs):
             # print(f'Epoch: {epoch}, iteration:{i}, loss:{loss.item()}')
             if len(n_unique_labels) <= 3:
                 break
-        print(f'Epoch: {epoch}, iteraion: {i}, the number of unique labels: {len(n_unique_labels)}, single batch mean loss: {np.mean(batch_sample_loss)}')
+        print(f'Epoch: {epoch}, iteraion: {i}, the number of unique labels: {len(n_unique_labels)}, '
+              f'single batch mean loss: {np.mean(batch_sample_loss)}')
         epoch_sample_loss.append(np.mean(batch_sample_loss))
     print(f'Epoch:{epoch}, epoch mean loss: {np.mean(epoch_sample_loss)}')
 
