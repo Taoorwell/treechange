@@ -44,7 +44,7 @@ for epoch in range(epochs):
             output_label = torch.argmax(output, dim=0)
             # print(f'Output label shape: {output_label.shape}')
             n_unique_labels = torch.unique(output_label)
-            # print(f'The number of unique labels: {len(n_unique_labels)}')
+            # print(f'Epoch:{epoch}, iteration:{i}, The number of unique labels: {len(n_unique_labels)}')
 
             # spatial refinements using segment in batch sample
             for i_segment in torch.unique(segment[0]):
@@ -59,9 +59,10 @@ for epoch in range(epochs):
             loss.backward()
             optimizer.step()
             batch_sample_loss.append(loss.item())
+            # print(f'Epoch: {epoch}, iteration:{i}, loss:{loss.item()}')
             if len(n_unique_labels) <= 3:
                 break
-        print(f'Epoch: {epoch}, Single batch mean loss: {np.mean(batch_sample_loss)}')
+        print(f'Epoch: {epoch}, iteraion: {i}, the number of unique labels: {len(n_unique_labels)}, single batch mean loss: {np.mean(batch_sample_loss)}')
         epoch_sample_loss.append(np.mean(batch_sample_loss))
     print(f'Epoch:{epoch}, epoch mean loss: {np.mean(epoch_sample_loss)}')
 

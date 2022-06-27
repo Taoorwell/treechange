@@ -100,7 +100,7 @@ class DiceLoss(nn.Module):
         # one hot for targets (index type)
         targets_one_hot = F.one_hot(targets, num_classes=outputs.shape[0])
         targets_one_hot = targets_one_hot.permute((2, 0, 1))
-        print(targets_one_hot.shape)
+        # print(targets_one_hot.shape)
         intersection = torch.sum(outputs*targets_one_hot)
         cardinality = torch.sum(outputs + targets_one_hot)
 
