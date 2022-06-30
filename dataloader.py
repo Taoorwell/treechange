@@ -8,7 +8,7 @@ from skimage.segmentation import slic, mark_boundaries
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
-
+from unets import ResUnet
 
 # TO DO: load images from file path
 # Apply augmentation to these images including flipping, cropping and ect.
@@ -50,6 +50,38 @@ def plot_sample(image, segment):
                                color=(0, 1, 1)))
     plt.xlabel('Segment')
 
+    plt.show()
+
+
+palette = {0: (255, 255, 255),  # White
+           1: (34, 139, 34),  # ForestGreen
+           3: (255, 0, 255),  # Magenta
+           2: (0, 255, 0),  # Lime
+           4: (255, 0, 0),  # Red
+           5: (255, 127, 80),  # Coral
+           6: (0, 191, 255),  # DeepSkyBlue
+           7: (0, 255, 255),  # Cyan
+           8: (0, 255, 0),  # Lime
+           9: (0, 128, 128),
+           10: (128, 128, 0),
+           11: (255, 128, 128),
+           12: (128, 128, 255),
+           13: (128, 255, 128),
+           14: (255, 128, 255),
+           15: (165, 42, 42),
+           16: (175, 238, 238)}
+
+
+def plot_outputs(outputs):
+    output = np.argmax(outputs[0].detach().numpy(), axis=0)
+    labels = np.unique(output)
+    print(labels)
+
+    output_3d = np.zeros((output.shape[0], output.shape[1], 3), dtype=np.uint8)
+    for i in range(len(labels)):
+        output_3d[output == labels[i]] = palette[i]
+
+    plt.imshow(output_3d)
     plt.show()
 
 
@@ -151,11 +183,17 @@ if __name__ == '__main__':
     #     print(sample['Image'].shape, sample['Segment'].shape)
     #     break
     # dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=2)
+    model = ResUnet(n_bands=7, n_classes=50)
+    model.load_state_dict(torch.load(r'unsupervised_model'))
+    model.eval()
     dataloader = dataloader(image_dir=r'images/', batch_size=1)
     for i_batch, sample_batched in enumerate(dataloader):
         print(i_batch, sample_batched['Image'].shape, sample_batched['Segment'].shape)
         plot_sample(image=sample_batched['Image'], segment=sample_batched['Segment'])
-        if i_batch == 3:
+        with torch.no_grad():
+            output = model(sample_batched['Image'])
+            plot_outputs(output)
+        if i_batch == 1:
             break
 
 

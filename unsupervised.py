@@ -1,8 +1,10 @@
+import os
 import torch
 from dataloader import dataloader, get_device
 from unets import ResUnet, DiceLoss
 import numpy as np
 
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 # Step 1: Datasets and Dataloader preparation
 dataloader = dataloader(image_dir=r'images/', batch_size=1)
 
